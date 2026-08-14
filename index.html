@@ -377,12 +377,26 @@
   if (typeof state.index !== "number" || state.index >= ITEMS.length) state.index = 0;
   if (!state.done) state.done = {};
 
-  function buildFormUrl(itemId, choice) {
+  var FORM_SUBMIT_URL = FORM_BASE.replace("/viewform", "/formResponse");
+
+  function buildFormViewUrl(itemId, choice) {
+    // Fallback only — used if a background submission fails, so nothing is lost.
     var params = new URLSearchParams();
     params.set("usp", "pp_url");
     params.set(ENTRY_ITEM_ID, itemId);
     params.set(ENTRY_CHOICE, choice);
     return FORM_BASE + "?" + params.toString();
+  }
+
+  function submitChoice(itemId, choice) {
+    // Silent background submission — no tab, no navigation. Google Forms accepts a plain
+    // POST to its /formResponse endpoint; mode:"no-cors" means we can't read the response
+    // (Google doesn't allow that cross-origin), so this can't be 100% verified client-side,
+    // but it's a well-established, reliable pattern for exactly this use case.
+    var body = new FormData();
+    body.append(ENTRY_ITEM_ID, itemId);
+    body.append(ENTRY_CHOICE, choice);
+    return fetch(FORM_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
   }
 
   function escapeHtml(s) {
@@ -438,12 +452,12 @@
     html += '  <div class="verdict">';
     html += '    <div class="verdict-label">Which set better describes this project?' + (alreadyAnswered ? ' <span class="answered-note">— already submitted, choosing again will add another response</span>' : '') + '</div>';
     html += '    <div class="verdict-row">';
-    html += '      <a class="stamp primary" target="_blank" rel="noopener" data-choice="Left" href="' + buildFormUrl(item.id, "Left") + '">Left is better <span class="key">←</span></a>';
-    html += '      <a class="stamp primary" target="_blank" rel="noopener" data-choice="Right" href="' + buildFormUrl(item.id, "Right") + '">Right is better <span class="key">→</span></a>';
+    html += '      <button class="stamp primary" data-choice="Left">Left is better <span class="key">←</span></button>';
+    html += '      <button class="stamp primary" data-choice="Right">Right is better <span class="key">→</span></button>';
     html += '    </div>';
     html += '    <div class="verdict-row-secondary">';
-    html += '      <a class="stamp" target="_blank" rel="noopener" data-choice="Tie" href="' + buildFormUrl(item.id, "Tie") + '">Tie</a>';
-    html += "      <a class=\"stamp\" target=\"_blank\" rel=\"noopener\" data-choice=\"Can't tell\" href=\"" + buildFormUrl(item.id, "Can't tell") + "\">Can&rsquo;t tell</a>";
+    html += '      <button class="stamp" data-choice="Tie">Tie</button>';
+    html += "      <button class=\"stamp\" data-choice=\"Can't tell\">Can&rsquo;t tell</button>";
     html += '    </div>';
     html += '  </div>';
     html += '</div>';
@@ -459,19 +473,34 @@
 
     app.innerHTML = html;
 
-    var stamps = app.querySelectorAll("a.stamp[data-choice]");
+    var stamps = app.querySelectorAll("button.stamp[data-choice]");
     for (var i = 0; i < stamps.length; i++) {
-      stamps[i].addEventListener("click", function () {
+      stamps[i].addEventListener("click", function (ev) {
+        var btn = ev.currentTarget;
+        var choice = btn.getAttribute("data-choice");
         var itemId = item.id;
-        state.done[itemId] = true;
-        saveProgress(state);
-        setTimeout(function () {
-          if (state.index < ITEMS.length - 1) {
-            state.index += 1;
-            saveProgress(state);
-          }
-          render();
-        }, 180);
+        var allButtons = app.querySelectorAll("button.stamp");
+        for (var j = 0; j < allButtons.length; j++) allButtons[j].disabled = true;
+        btn.textContent = "Submitting…";
+
+        function advance() {
+          state.done[itemId] = true;
+          saveProgress(state);
+          setTimeout(function () {
+            if (state.index < ITEMS.length - 1) {
+              state.index += 1;
+              saveProgress(state);
+            }
+            render();
+          }, 220);
+        }
+
+        submitChoice(itemId, choice).then(advance).catch(function () {
+          // Genuine network failure (rare) — fall back to the old open-a-tab path
+          // so the response still isn't lost.
+          window.open(buildFormViewUrl(itemId, choice), "_blank", "noopener");
+          advance();
+        });
       });
     }
 
