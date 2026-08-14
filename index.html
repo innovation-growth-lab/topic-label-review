@@ -340,10 +340,16 @@
     Each record below is one funded project. Two sets of topic labels were assigned by different
     classification methods — <b>which method produced which set is intentionally hidden</b>. Read the
     project description, compare the two sets, and pick the one that better describes the project (or
-    Tie / Can't tell). Your choice opens a short form, already filled in — just hit <b>Submit</b> there.
+    Tie / Can't tell). Your choice is recorded immediately — no extra steps.
   </p>
 
   <div id="app"></div>
+
+  <iframe name="submit-target" style="display:none;" title="submission target"></iframe>
+  <form id="submit-form" target="submit-target" method="POST" style="display:none;">
+    <input type="hidden" name="entry.885386435" id="submit-item-id">
+    <input type="hidden" name="entry.1374050794" id="submit-choice">
+  </form>
 </main>
 
 <script>
@@ -379,24 +385,17 @@
 
   var FORM_SUBMIT_URL = FORM_BASE.replace("/viewform", "/formResponse");
 
-  function buildFormViewUrl(itemId, choice) {
-    // Fallback only — used if a background submission fails, so nothing is lost.
-    var params = new URLSearchParams();
-    params.set("usp", "pp_url");
-    params.set(ENTRY_ITEM_ID, itemId);
-    params.set(ENTRY_CHOICE, choice);
-    return FORM_BASE + "?" + params.toString();
-  }
+  // Real <form> POST into a hidden iframe — genuine form-submission behaviour, not a
+  // programmatic fetch/XHR/beacon call, so ad-block and privacy extensions (which
+  // specifically target those patterns as tracking-beacon-shaped) generally leave it
+  // alone. The top-level page never navigates; the iframe absorbs Google's response.
+  var submitForm = document.getElementById("submit-form");
+  submitForm.action = FORM_SUBMIT_URL;
 
   function submitChoice(itemId, choice) {
-    // Silent background submission — no tab, no navigation. Google Forms accepts a plain
-    // POST to its /formResponse endpoint; mode:"no-cors" means we can't read the response
-    // (Google doesn't allow that cross-origin), so this can't be 100% verified client-side,
-    // but it's a well-established, reliable pattern for exactly this use case.
-    var body = new FormData();
-    body.append(ENTRY_ITEM_ID, itemId);
-    body.append(ENTRY_CHOICE, choice);
-    return fetch(FORM_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+    document.getElementById("submit-item-id").value = itemId;
+    document.getElementById("submit-choice").value = choice;
+    submitForm.submit();
   }
 
   function escapeHtml(s) {
@@ -483,24 +482,16 @@
         for (var j = 0; j < allButtons.length; j++) allButtons[j].disabled = true;
         btn.textContent = "Submitting…";
 
-        function advance() {
-          state.done[itemId] = true;
-          saveProgress(state);
-          setTimeout(function () {
-            if (state.index < ITEMS.length - 1) {
-              state.index += 1;
-              saveProgress(state);
-            }
-            render();
-          }, 220);
-        }
-
-        submitChoice(itemId, choice).then(advance).catch(function () {
-          // Genuine network failure (rare) — fall back to the old open-a-tab path
-          // so the response still isn't lost.
-          window.open(buildFormViewUrl(itemId, choice), "_blank", "noopener");
-          advance();
-        });
+        submitChoice(itemId, choice);
+        state.done[itemId] = true;
+        saveProgress(state);
+        setTimeout(function () {
+          if (state.index < ITEMS.length - 1) {
+            state.index += 1;
+            saveProgress(state);
+          }
+          render();
+        }, 220);
       });
     }
 
