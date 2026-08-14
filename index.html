@@ -109,27 +109,6 @@
     transition: width 0.25s ease;
   }
 
-  .track-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    background: var(--chip-bg);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 0.28rem 0.55rem;
-  }
-  .track-badge .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
   .record-id {
     font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
     font-size: 0.72rem;
@@ -363,11 +342,6 @@
   var ENTRY_ITEM_ID = "entry.885386435";
   var ENTRY_CHOICE = "entry.1374050794";
 
-  var TRACK_LABELS = {
-    consensus: "Track A — keyword-consensus scope",
-    matchstring: "Track B — match-string scope"
-  };
-
   var STORAGE_KEY = "label_review_ledger_v2";
   var EMAIL_KEY = "label_review_ledger_email";
 
@@ -488,12 +462,10 @@
 
     var item = ITEMS[state.index];
     var alreadyAnswered = !!state.done[item.id];
-    var trackLabel = TRACK_LABELS[item.track] || item.track;
 
     var html = '';
     html += '<div class="card">';
-    html += '  <div class="card-head">';
-    html += '    <span class="track-badge"><span class="dot"></span>' + escapeHtml(trackLabel) + '</span>';
+    html += '  <div class="card-head" style="justify-content:flex-end;">';
     html += '    <span class="record-id">' + escapeHtml(item.id.slice(-8)) + '</span>';
     html += '  </div>';
     html += '  <div class="side-label" style="margin-bottom:0.3rem;">Project title</div>';
