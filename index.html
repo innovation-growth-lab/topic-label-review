@@ -423,9 +423,9 @@
     var app = document.getElementById("app");
     app.innerHTML =
       '<div class="card">' +
-      '  <div class="side-label" style="margin-bottom:0.5rem;">Before you start</div>' +
+      '  <div class="side-label" style="margin-bottom:0.5rem;">Welcome</div>' +
       '  <h2 class="project-title" style="margin-bottom:0.6rem;">What&rsquo;s your email?</h2>' +
-      '  <p class="project-desc" style="margin-bottom:1rem;">Used only to track review completion across the team — not shown to anyone else, and never attached to which answers you gave.</p>' +
+      '  <p class="project-desc" style="margin-bottom:1rem;">Quick check before the review itself: used only to track who&rsquo;s completed it, not shown to anyone else, and never attached to which answers you gave. Instructions for the task itself are just below once you continue.</p>' +
       '  <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">' +
       '    <input id="email-input" type="email" placeholder="you@example.com" style="flex:1; min-width:220px; padding:0.65rem 0.8rem; border-radius:7px; border:1.5px solid var(--border-strong); background:var(--surface-raised); color:var(--ink); font-size:0.92rem;">' +
       '    <button id="email-continue" class="stamp primary" style="flex:none;">Continue</button>' +
@@ -450,12 +450,16 @@
   }
 
   function render() {
+    var introEl = document.getElementById("intro-text");
+
     if (!loadEmail()) {
+      introEl.style.display = "none";
       document.getElementById("progress-count").textContent = "";
       document.getElementById("progress-fill").style.width = "0%";
       renderEmailGate();
       return;
     }
+    introEl.style.display = "";
 
     var total = ITEMS.length;
     var doneCount = Object.keys(state.done).length;
