@@ -329,6 +329,7 @@
     <div>
       <h1>Label Review Ledger</h1>
       <div class="strapline">Blind comparison of topic-label sets — UKRI project classification</div>
+      <div class="strapline"><a href="#" id="reset-link" style="color:inherit;">Not you, or want to start over? Reset this browser&rsquo;s progress</a></div>
     </div>
     <div class="progress-block">
       <div class="progress-count" id="progress-count">— of —</div>
@@ -556,6 +557,15 @@
       if (state.index < ITEMS.length - 1) { state.index += 1; saveProgress(state); render(); }
     });
   }
+
+  document.getElementById("reset-link").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    if (window.confirm("Reset this browser's saved progress and email? This only affects what this browser remembers locally — it doesn't touch any submitted responses.")) {
+      try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(EMAIL_KEY); } catch (e) {}
+      state = { index: 0, done: {} };
+      render();
+    }
+  });
 
   render();
 })();
