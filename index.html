@@ -419,7 +419,9 @@
     html += '    <span class="track-badge"><span class="dot"></span>' + escapeHtml(trackLabel) + '</span>';
     html += '    <span class="record-id">' + escapeHtml(item.id.slice(-8)) + '</span>';
     html += '  </div>';
+    html += '  <div class="side-label" style="margin-bottom:0.3rem;">Project title</div>';
     html += '  <h2 class="project-title">' + escapeHtml(item.title || "(untitled project)") + '</h2>';
+    html += '  <div class="side-label" style="margin:0.9rem 0 0.3rem;">Project description (first ~60 words)</div>';
     html += '  <p class="project-desc">' + escapeHtml(item.text || "") + (item.text && item.text.length >= 400 ? "…" : "") + '</p>';
     html += '  <div class="compare">';
     html += '    <div class="side">';
