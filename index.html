@@ -220,6 +220,15 @@
     font-size: 0.78rem;
     margin-top: 0.15rem;
   }
+  .chip .chip-plain {
+    /* Deliberately the same weight as chip-sub's keyword text, never chip-primary's
+       bold — a keywords-only label has no name to bold, and bolding the raw keyword
+       string would make it look more prominent than a real name for no real reason. */
+    color: var(--ink);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    font-weight: 400;
+  }
 
   .verdict {
     margin-top: 1.5rem;
@@ -401,12 +410,22 @@
   }
 
   function chipHtml(labelString) {
-    // labelString looks like "Primary Label: Keyword; Keyword; Keyword..."
-    var parts = labelString.split(":");
-    var primary = parts[0].trim();
-    var rest = parts.slice(1).join(":").trim();
-    var html = '<div class="chip"><div class="chip-primary">' + escapeHtml(primary) + '</div>';
-    if (rest) html += '<div class="chip-sub">' + escapeHtml(rest) + '</div>';
+    // Two shapes occur, by design, not by accident:
+    //  - "Primary Label: keyword; keyword; ..." (label+keywords match string)
+    //  - "keyword; keyword; ..." with no name at all (keywords-only match string)
+    // The second shape must NOT be bolded as if it had a name — that would visually
+    // favour whichever side happens to have a colon, biasing raters on formatting
+    // rather than content.
+    var colonIdx = labelString.indexOf(":");
+    var html = '<div class="chip">';
+    if (colonIdx === -1) {
+      html += '<div class="chip-plain">' + escapeHtml(labelString.trim()) + '</div>';
+    } else {
+      var primary = labelString.slice(0, colonIdx).trim();
+      var rest = labelString.slice(colonIdx + 1).trim();
+      html += '<div class="chip-primary">' + escapeHtml(primary) + '</div>';
+      if (rest) html += '<div class="chip-sub">' + escapeHtml(rest) + '</div>';
+    }
     html += '</div>';
     return html;
   }
