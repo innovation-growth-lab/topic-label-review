@@ -329,7 +329,7 @@
     <div>
       <h1>Label Review Ledger</h1>
       <div class="strapline">Blind comparison of topic-label sets — UKRI project classification</div>
-      <div class="strapline"><a href="#" id="reset-link" style="color:inherit;">Reset saved progress on this device</a></div>
+      <div class="strapline">Progress saves automatically on this device as you go — the same link on a different device or browser starts fresh. <a href="#" id="reset-link" style="color:inherit;">Reset saved progress on this device</a></div>
     </div>
     <div class="progress-block">
       <div class="progress-count" id="progress-count">— of —</div>
@@ -475,6 +475,16 @@
       return;
     }
 
+    if (doneCount >= total) {
+      app.innerHTML =
+        '<div class="done-screen">' +
+        '  <h2>Label review complete</h2>' +
+        '  <p>You&rsquo;ve answered all ' + total + ' items — thank you. If you&rsquo;d like to go through it ' +
+        'again from scratch, use &ldquo;Reset saved progress&rdquo; above.</p>' +
+        '</div>';
+      return;
+    }
+
     var item = ITEMS[state.index];
     var alreadyAnswered = !!state.done[item.id];
     var trackLabel = TRACK_LABELS[item.track] || item.track;
@@ -518,10 +528,6 @@
     html += '  <button id="prev-btn"' + (state.index === 0 ? " disabled" : "") + '>&larr; Previous</button>';
     html += '  <button id="skip-btn">Skip without answering &rarr;</button>';
     html += '</div>';
-
-    if (state.index === total - 1 && alreadyAnswered) {
-      html += '<div class="done-screen"><h2>That was the last one</h2><p>Thank you — you can still revisit earlier items with Previous if you want to change an answer.</p></div>';
-    }
 
     app.innerHTML = html;
 
